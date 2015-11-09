@@ -2,8 +2,8 @@
 
 var INIT_DATE = new Date('1970-01-01');
 var MS_PER_MINUTE = 60 * 1000;
-var MS_PER_HOUR = 60 * 60 * 1000;
-var MS_PER_DAY = 24 * 60 * 60 * 1000;
+var MS_PER_HOUR = 60 * MS_PER_MINUTE;
+var MS_PER_DAY = 24 * MS_PER_HOUR;
 var DAYS_LIST = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
 module.exports = function (pattern) {
@@ -32,9 +32,9 @@ module.exports = function (pattern) {
         format: function (pattern) {
             var result = pattern;
             var date = new Date(this.date.getTime() + this.timezone * MS_PER_HOUR);
-            result = result.replace(/%DD/gi, DAYS_LIST[date.getDay()]);
-            result = result.replace(/%HH/gi, _addZero(date.getHours()));
-            result = result.replace(/%MM/gi, _addZero(date.getMinutes()));
+            result = result.replace(/%DD/gi, DAYS_LIST[date.getUTCDay()]);
+            result = result.replace(/%HH/gi, _addZero(date.getUTCHours()));
+            result = result.replace(/%MM/gi, _addZero(date.getUTCMinutes()));
             return result;
         },
 
@@ -81,8 +81,8 @@ function _makeDate(pattern) {
     parseDate.timezone = _initTimezone(pattern);
 
     var date = new Date(INIT_DATE.getTime());
-    date.setDate(INIT_DATE.getDate() + (7 - INIT_DATE.getDay() + parseDate.day));
-    date.setHours(parseDate.hours - parseDate.timezone, parseDate.minutes, 0, 0);
+    date.setUTCDate(INIT_DATE.getDate() + (7 - INIT_DATE.getUTCDay() + parseDate.day));
+    date.setUTCHours(parseDate.hours - parseDate.timezone, parseDate.minutes, 0, 0);
 
     return date;
 }
