@@ -1,16 +1,62 @@
 'use strict';
 
 var moment = require('./moment');
+var WORK_WEEK = ['ПН', 'ВТ', 'СР'];
 
 // Выбирает подходящий ближайший момент начала ограбления
 module.exports.getAppropriateMoment = function (json, minDuration, workingHours) {
-    var appropriateMoment = moment();
+    var schedule = JSON.parse(json);
+    var timeLine = [];
 
-    // 1. Читаем json
-    // 2. Находим подходящий ближайший момент начала ограбления
-    // 3. И записываем в appropriateMoment
+    Object.keys(schedule).forEach(function (member) {
+        schedule[member].forEach(function (time) {
+            timeLine.push({
+                moment: moment(time.from),
+                free: false
+            });
+            timeLine.push({
+                moment: moment(time.to),
+                free: true
+            });
+        });
+    });
 
-    return appropriateMoment;
+    WORK_WEEK.forEach(function (day) {
+        timeLine.push({
+            moment: moment(day + ' ' + workingHours.from),
+            free: true
+        });
+        timeLine.push({
+            moment: moment(day + ' ' + workingHours.to),
+            free: false
+        });
+    });
+
+    timeLine.sort(function (a, b) {
+        return a.moment.date - b.moment.date;
+    });
+
+    var freeMembers = Object.keys(schedule).length;
+    var needToHeist = freeMembers + 1;
+    for (var i = 0; i < timeLine.length; ++i) {
+        if (timeLine[i].free) {
+            ++freeMembers;
+        } else {
+            --freeMembers;
+        }
+        if (freeMembers === needToHeist) {
+            for (var j = i + 1; j < timeLine.length; ++j) {
+                var freeTime =
+                    timeLine[j].moment.date.getTime() - timeLine[i].moment.date.getTime();
+                if ((freeTime - minDuration * 60 * 1000) >= 0) {
+                    return timeLine[i].moment;
+                }
+                if (!timeLine[j].free) {
+                    break;
+                }
+            }
+        }
+    }
 };
 
 // Возвращает статус ограбления (этот метод уже готов!)
