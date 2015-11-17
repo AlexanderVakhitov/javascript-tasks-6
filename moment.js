@@ -5,18 +5,6 @@ var MS_PER_MINUTE = 60 * 1000;
 var MS_PER_HOUR = 60 * MS_PER_MINUTE;
 var MS_PER_DAY = 24 * MS_PER_HOUR;
 var DAYS_LIST = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
-var DATE_CASE = {
-    0: ['дней', 'часов', 'минут'],
-    1: ['день', 'час', 'минута'],
-    2: ['дня', 'часа', 'минуты'],
-    3: ['дня', 'часа', 'минуты'],
-    4: ['дня', 'часа', 'минуты'],
-    5: ['дней', 'часов', 'минут'],
-    6: ['дней', 'часов', 'минут'],
-    7: ['дней', 'часов', 'минут'],
-    8: ['дней', 'часов', 'минут'],
-    9: ['дней', 'часов', 'минут']
-};
 
 module.exports = function (pattern) {
     return {
@@ -42,12 +30,11 @@ module.exports = function (pattern) {
 
         // Выводит дату в переданном формате
         format: function (pattern) {
-            var result = pattern;
             var date = new Date(this.date + this.timezone * MS_PER_HOUR);
-            result = result.replace('%DD', DAYS_LIST[date.getUTCDay()]);
-            result = result.replace('%HH', addZero(date.getUTCHours()));
-            result = result.replace('%MM', addZero(date.getUTCMinutes()));
-            return result;
+            return pattern
+                .replace('%DD', DAYS_LIST[date.getUTCDay()])
+                .replace('%HH', addZero(date.getUTCHours()))
+                .replace('%MM', addZero(date.getUTCMinutes()));
         },
 
         // Возвращает кол-во времени между текущей датой и переданной `moment`
@@ -82,20 +69,30 @@ function initTimezone(pattern) {
 }
 
 function printTime(infoTime) {
-    var result = 'До ограбления: ';
-    result += chooseCase(infoTime[0], 0);
-    result += chooseCase(infoTime[1], 1);
-    result += chooseCase(infoTime[2], 2);
-    return result;
+    return 'До ограбления: ' +
+        chooseCase(infoTime[0], ['день', 'дня', 'дней']) +
+        chooseCase(infoTime[1], ['час', 'часа', 'часов']) +
+        chooseCase(infoTime[2], ['минута', 'минуты', 'минут']);
 }
 
-function chooseCase(value, type) {
-    var result = '';
-    if (value > 0) {
-        result += value + ' ';
-        result += DATE_CASE[value % 10][type] + ' ';
+function chooseCase(value, cases) {
+    if (value <= 0) {
+        return '';
     }
-    return result;
+    if (value >= 11 && value <= 19) {
+        return value + ' ' + cases[2] + ' ';
+    }
+    var i = value % 10;
+    switch (i) {
+        case 1:
+            return value + ' ' + cases[0] + ' ';
+        case 2:
+        case 3:
+        case 4:
+            return value + ' ' + cases[1] + ' ';
+        default:
+            return value + ' ' + cases[2] + ' ';
+    }
 }
 
 function makeDate(pattern) {
